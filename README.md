@@ -1,46 +1,159 @@
-# Getting Started with Create React App
+# Twin + Create React App + Emotion
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+It is based on ts, but it is also possible on jsx.
 
-## Available Scripts
+## Getting started
 
-In the project directory, you can run:
+### installation
 
-### `npm start`
+Install Create React App
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+```
+npx create-react-app my-app --template typescript
+```
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+Install the dependencies
 
-### `npm test`
+```
+npm install twin.macro tailwindcss @emotion/react @emotion/styled
+```
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### Add the global styles
 
-### `npm run build`
+```tsx
+// index.tsx
+import React from "react";
+import ReactDOM from "react-dom/client";
+import { GlobalStyles } from "twin.macro";
+import App from "./App";
+import reportWebVitals from "./reportWebVitals";
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+const root = ReactDOM.createRoot(
+  document.getElementById("root") as HTMLElement
+);
+root.render(
+  <React.StrictMode>
+    <GlobalStyles />
+    <App />
+  </React.StrictMode>
+);
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+// If you want to start measuring performance in your app, pass a function
+// to log results (for example: reportWebVitals(console.log))
+// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
+reportWebVitals();
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### Add the twin config in `package.json` (optional)
 
-### `npm run eject`
+```json
+// package.json
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+"babelMacros": {
+  "twin": {
+    "preset": "emotion",
+    "config": "tailwind.config.js"
+  }
+},
+```
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+Or you can add it to `babel-plugin-macros.config.js`:
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+```js
+// babel-plugin-macros.config.js
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+module.exports = {
+  twin: {
+    preset: "emotion",
+    config: "tailwind.config.js",
+  },
+};
+```
 
-## Learn More
+Note: The preset gets set to 'emotion' by default, so adding the config is only useful if you want to adjust [Twin’s other options](#twin-options).
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+### Add the jsx pragma
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+To use the `tw` and `css` props, emotion must first extend jsx with a [jsx pragma](https://emotion.sh/docs/css-prop#jsx-pragma).
+
+When styling with the tw or css prop, add the pragma at the top of your file. This also replaces the react import, unless you’re using fragments `<>`.
+
+```js
+/** @jsxImportSource @emotion/react */
+import tw from "twin.macro";
+
+const Input = () => <input tw="bg-black" />;
+```
+
+If you don't want to use jsx pragma, follow below:
+
+Install `react-app-rewired` and `customize-cra`
+
+```
+npm i react-app-rewired customize-cra
+```
+
+Install babel's plugins
+
+```
+npm install @emotion/babel-plugin-jsx-pragmatic @babel/plugin-transform-react-jsx
+```
+
+Create `config-overrides.js` and `.babelrc` in root
+
+```js
+// config-overrides.js
+
+const {
+  useBabelRc,
+  removeModuleScopePlugin,
+  override,
+} = require("customize-cra");
+
+module.exports = override(useBabelRc(), removeModuleScopePlugin());
+```
+
+```json
+// .babelrc
+
+{
+  "plugins": [
+    "babel-plugin-macros",
+    [
+      "@emotion/babel-plugin-jsx-pragmatic",
+      {
+        "export": "jsx",
+        "import": "__cssprop",
+        "module": "@emotion/react"
+      }
+    ],
+    [
+      "@babel/plugin-transform-react-jsx",
+      {
+        "pragma": "__cssprop",
+        "pragmaFrag": "React.Fragment"
+      }
+    ]
+  ]
+}
+```
+
+Modify the `package.json`'s scripts
+
+```json
+// package.json
+
+"scripts": {
+  "start": "react-app-rewired start",
+  "build": "react-app-rewired build",
+  "test": "react-app-rewired test",
+},
+```
+
+Finally, you can use twin without jsx pragma.
+
+## Resourse
+
+- https://github.com/ben-rogerson/twin.macro
+- https://github.com/ben-rogerson/twin.examples/tree/master/cra-emotion
+- https://velog.io/@joabyjoa/create-react-app-typescript-emotion%EC%9C%BC%EB%A1%9C-React-%ED%94%84%EB%A1%9C%EC%A0%9D%ED%8A%B8-%EC%8B%9C%EC%9E%91%ED%95%98%EA%B8%B0
